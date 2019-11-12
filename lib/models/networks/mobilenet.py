@@ -16,7 +16,8 @@ class DeformConv(nn.Module):
             nn.BatchNorm2d(cho, momentum=0.1),
             nn.ReLU(inplace=True)
         )
-        self.conv = DCN(chi, cho, kernel_size=(3, 3), stride=1, padding=1, dilation=1, deformable_groups=1)
+        self.conv = DCN(chi, cho, kernel_size=(3, 3), stride=1,
+                        padding=1, dilation=1, deformable_groups=1)
 
     def forward(self, x):
         x = self.conv(x)
@@ -68,10 +69,12 @@ class SeModule(nn.Module):
         super(SeModule, self).__init__()
         self.se = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(in_size, in_size // reduction, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv2d(in_size, in_size // reduction, kernel_size=1,
+                      stride=1, padding=0, bias=False),
             nn.BatchNorm2d(in_size // reduction),
             nn.ReLU(inplace=True),
-            nn.Conv2d(in_size // reduction, in_size, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv2d(in_size // reduction, in_size, kernel_size=1,
+                      stride=1, padding=0, bias=False),
             nn.BatchNorm2d(in_size),
             hsigmoid()
         )
@@ -87,20 +90,23 @@ class Block(nn.Module):
         super(Block, self).__init__()
         self.stride = stride
         self.se = semodule
-        self.conv1 = nn.Conv2d(in_size, expand_size, kernel_size=1, stride=1, padding=0, bias=False)
+        self.conv1 = nn.Conv2d(in_size, expand_size,
+                               kernel_size=1, stride=1, padding=0, bias=False)
         self.bn1 = nn.BatchNorm2d(expand_size)
         self.nolinear1 = nolinear
         self.conv2 = nn.Conv2d(expand_size, expand_size, kernel_size=kernel_size, stride=stride,
                                padding=kernel_size // 2, groups=expand_size, bias=False)
         self.bn2 = nn.BatchNorm2d(expand_size)
         self.nolinear2 = nolinear
-        self.conv3 = nn.Conv2d(expand_size, out_size, kernel_size=1, stride=1, padding=0, bias=False)
+        self.conv3 = nn.Conv2d(expand_size, out_size,
+                               kernel_size=1, stride=1, padding=0, bias=False)
         self.bn3 = nn.BatchNorm2d(out_size)
 
         self.shortcut = nn.Sequential()
         if stride == 1 and in_size != out_size:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(in_size, out_size, kernel_size=1, stride=1, padding=0, bias=False),
+                nn.Conv2d(in_size, out_size, kernel_size=1,
+                          stride=1, padding=0, bias=False),
                 nn.BatchNorm2d(out_size),
             )
 
@@ -129,7 +135,8 @@ def fill_up_weights(up):
 class MobileNetV3(nn.Module):
     def __init__(self, heads, final_kernel, head_conv):
         super(MobileNetV3, self).__init__()
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=2, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(3, 16, kernel_size=3,
+                               stride=2, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(16)
         self.hs1 = hswish()
 
@@ -156,7 +163,8 @@ class MobileNetV3(nn.Module):
             Block(5, 160, 672, 160, hswish(), SeModule(160), 2),
             Block(5, 160, 960, 160, hswish(), SeModule(160), 1),
         )
-        self.conv2 = nn.Conv2d(160, 960, kernel_size=1, stride=1, padding=0, bias=False)
+        self.conv2 = nn.Conv2d(160, 960, kernel_size=1,
+                               stride=1, padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(960)
         self.hs2 = hswish()
         self.init_params()
@@ -201,10 +209,10 @@ class MobileNetV3(nn.Module):
         out = [out0, out1, out2, out3]
         y = []
         for i in range(4):
+            print("out shape: ", out[i].shape, i)
             y.append(out[i].clone())
         self.ida_up(y, 0, len(y))
         z = {}
         for head in self.heads:
             z[head] = self.__getattr__(head)(y[-1])
         return [z]
-

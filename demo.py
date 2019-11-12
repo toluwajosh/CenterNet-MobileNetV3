@@ -31,20 +31,22 @@ from lib.detectors.ctdet import CtdetDetector
 
 time_stats = ['tot', 'pre', 'net', 'dec', 'post', 'merge']
 
+
 def demo(opt):
-  detector = CtdetDetector(opt)
-  cam = cv2.VideoCapture(0)
-  while True:
-    _, img = cam.read()
-    ret = detector.run(img)
-    time_str = ''
-    for stat in time_stats:
-      time_str = time_str + '{} {:.3f}s |'.format(stat, ret[stat])
-    print(time_str)
-    if cv2.waitKey(1) == 27:
-        return  # esc to quit
+    detector = CtdetDetector(opt)
+    cam = cv2.VideoCapture(0)
+    while True:
+        _, img = cam.read()
+        ret = detector.run(img)
+        time_str = ''
+        for stat in time_stats:
+            time_str = time_str + '{} {:.3f}s |'.format(stat, ret[stat])
+        print(time_str)
+        if cv2.waitKey(1) == 27:
+            return  # esc to quit
+
 
 if __name__ == '__main__':
-  opt = opts().init()
-  print(opt)
-  demo(opt)
+    opt = opts().init()
+    print(opt)
+    demo(opt)
