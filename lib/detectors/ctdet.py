@@ -18,13 +18,18 @@ class CtdetDetector(BaseDetector):
 
     def process(self, images, return_time=False):
         with torch.no_grad():
-            output = self.model(images) # list of dictionaries as output
-            output = self.model(images)[-1]
-            # traced_script_module = torch.jit.trace(
-            # self.model, images, check_trace=False)
-            # traced_script_module.save("traced_model.pt")
-            hm = output['hm'].sigmoid_()
-            wh = output['wh']
+            # output = self.model(images)[-1]
+            output = self.model(images)
+            traced_script_module = torch.jit.trace(
+            self.model, images, check_trace=False)
+            traced_script_module.save("traced_model.pt")
+            # hm = output['hm'].sigmoid_()
+            # wh = output['wh']
+            hm = output[:, 0:2, :, :]
+            wh = output[:, 2:4, :, :]
+
+            print("hm shape: ", hm.shape)
+            print("wh shape: ", wh.shape)
             # reg = output['reg']
             torch.cuda.synchronize()
             forward_time = time.time()

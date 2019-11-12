@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import math
+import torch
 import torch.nn.functional as F
 from torch import nn
 from torch.nn import init
@@ -16,8 +17,10 @@ class DeformConv(nn.Module):
             nn.BatchNorm2d(cho, momentum=0.1),
             nn.ReLU(inplace=True)
         )
-        self.conv = DCN(chi, cho, kernel_size=(3, 3), stride=1,
-                        padding=1, dilation=1, deformable_groups=1)
+        # self.conv = DCN(chi, cho, kernel_size=(3, 3), stride=1,
+        #                 padding=1, dilation=1, deformable_groups=1)
+        self.conv = nn.Conv2d(chi, cho, kernel_size=(3, 3), stride=1,
+                        padding=1, dilation=1, groups=1)
 
     def forward(self, x):
         x = self.conv(x)
@@ -209,10 +212,16 @@ class MobileNetV3(nn.Module):
         out = [out0, out1, out2, out3]
         y = []
         for i in range(4):
-            print("out shape: ", out[i].shape, i)
             y.append(out[i].clone())
+        # this kind of reverses the sequence of the layers
         self.ida_up(y, 0, len(y))
-        z = {}
+        z = y[-1]
+        z = []
+        # z = {}
         for head in self.heads:
-            z[head] = self.__getattr__(head)(y[-1])
-        return [z]
+            # z[head] = self.__getattr__(head)(y[-1])
+            z.append(self.__getattr__(head)(y[-1]))
+        z[0][:, 0:2, :, :] = z[0][:, 0:2, :, :].sigmoid_()
+        z = torch.cat(z, 1)
+
+        return z
